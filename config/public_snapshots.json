@@ -4,8 +4,8 @@
   "snapshots": [
     {
       "family": "calibrated_lr3e5",
-      "id": "viability-r1-calibrated-lr3e5:joint:0000",
-      "basis": "only completed checkpoint for this calibrated family"
+      "id": "compute-extension-r1-calibrated-lr3e5:joint:0001",
+      "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr1e4",
