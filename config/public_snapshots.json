@@ -9,8 +9,8 @@
     },
     {
       "family": "calibrated_lr1e4",
-      "id": "viability-r1-calibrated-lr1e4:joint:0000",
-      "basis": "only completed checkpoint for this calibrated family"
+      "id": "compute-extension-r1-calibrated-lr1e4:joint:0001",
+      "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr3e4",
@@ -19,8 +19,8 @@
     },
     {
       "family": "calibrated_lr1e4_halfbatch",
-      "id": "viability-wave2-r1-calibrated-lr1e4-halfbatch:joint:0002",
-      "basis": "terminal best validation-loss checkpoint from the frozen continuation"
+      "id": "compute-extension-r1-calibrated-lr1e4-halfbatch:joint:0003",
+      "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     }
   ]
 }
