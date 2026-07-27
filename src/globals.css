@@ -908,3 +908,433 @@ footer p {
     flex-direction: column;
   }
 }
+
+/* Restrained scientific interface: flat surfaces, one UI accent, explicit keys. */
+:root {
+  --ink: #17232d;
+  --muted: #5b6975;
+  --panel: #ffffff;
+  --panel-solid: #ffffff;
+  --line: #d6dde3;
+  --cyan: #006d83;
+  --orange: #c45100;
+  --violet: #594c78;
+  --background: #f1f3f5;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: #f1f3f5;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.dashboard-shell {
+  width: min(1480px, calc(100% - 48px));
+}
+
+.topbar {
+  height: 72px;
+  border-color: #cbd3da;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+}
+
+.brand {
+  gap: 0;
+}
+
+.brand-mark {
+  display: none;
+}
+
+.brand p {
+  color: #003b71;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.brand h1 {
+  color: #17232d;
+  font-size: 17px;
+}
+
+.topbar-status strong {
+  color: #244f37;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.topbar-status small {
+  color: #65727d;
+  font-size: 11px;
+}
+
+.status-dot,
+.status-dot.is-live {
+  width: 7px;
+  height: 7px;
+  background: #2f7d4d;
+  box-shadow: none;
+}
+
+.hero-row {
+  align-items: start;
+  padding: 48px 0 32px;
+}
+
+.hero-row h2 {
+  max-width: 760px;
+  color: #17232d;
+  font-size: clamp(36px, 4.2vw, 58px);
+  font-weight: 560;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.hero-copy {
+  color: #52616d;
+  font-size: 15px;
+  line-height: 1.58;
+}
+
+.eyebrow {
+  color: #004f71;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.epoch-control {
+  gap: 9px;
+  border-color: #cbd4db;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.epoch-control label,
+.epoch-hash,
+.micro-label {
+  color: #5d6b76;
+  font-size: 10px;
+}
+
+.epoch-control select {
+  border-color: #aebbc5;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #17232d;
+}
+
+.epoch-hash code {
+  color: #344550;
+}
+
+.science-banner,
+.decision-banner {
+  grid-template-columns: 190px 1fr;
+  border: 1px solid #dfd4c8;
+  border-left: 4px solid #c45100;
+  border-radius: 2px;
+  background: #fffaf5;
+}
+
+.science-banner span {
+  color: #614f43;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.decision-banner {
+  border-color: #d8d1e0;
+  border-left-color: #594c78;
+  background: #faf8fc;
+}
+
+.decision-banner span {
+  color: #554e5e;
+  font-size: 13px;
+}
+
+.stats-grid {
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #d2d9df;
+  border-radius: 3px;
+  background: #d2d9df;
+}
+
+.stat-card,
+.stat-card--accent {
+  min-height: 112px;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+.stat-card span,
+.event-picker span,
+.condition-strip span,
+.metric-cell span,
+.provenance-panel span {
+  color: #5c6974;
+  font-size: 10px;
+}
+
+.stat-card strong {
+  color: #17232d;
+  font-size: 26px;
+}
+
+.stat-card small {
+  color: #65737e;
+  font-size: 11px;
+}
+
+.event-toolbar {
+  border-color: #d2d9df;
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.event-picker button,
+.view-controls button {
+  border-color: #b9c3cb;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #263640;
+}
+
+.condition-strip strong,
+.condition-strip code {
+  color: #263640;
+  font-size: 12px;
+}
+
+.panel {
+  border-color: #d2d9df;
+  border-radius: 3px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.panel-heading h3,
+.method-panel h3 {
+  color: #17232d;
+  font-weight: 600;
+}
+
+.view-controls span {
+  color: #5d6b76;
+  font-size: 10px;
+}
+
+.cloud-card {
+  border-color: #344550;
+  border-radius: 3px;
+  background: #08141e;
+}
+
+.cloud-card::before {
+  display: none;
+}
+
+.cloud-card__heading strong {
+  color: #eef4f7;
+}
+
+.cloud-card__heading > div:first-child strong {
+  color: var(--cloud-color);
+}
+
+.cloud-card__heading span {
+  color: #aebdc7;
+  font-size: 10px;
+}
+
+.deposit-key {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 15px 16px;
+  border: 1px solid #d9e0e5;
+  border-radius: 2px;
+  background: #f8fafb;
+}
+
+.deposit-key__heading,
+.deposit-key__content,
+.deposit-key__series,
+.deposit-key__scale,
+.deposit-key__series span,
+.deposit-key__scale span {
+  display: flex;
+  align-items: center;
+}
+
+.deposit-key__heading,
+.deposit-key__content {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.deposit-key__heading strong {
+  font-size: 12px;
+}
+
+.deposit-key__heading span,
+.deposit-key p {
+  color: #5b6975;
+  font-size: 11px;
+}
+
+.deposit-key__series,
+.deposit-key__scale {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.deposit-key__series span,
+.deposit-key__scale span {
+  gap: 7px;
+  color: #344550;
+  font-size: 11px;
+}
+
+.deposit-key p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.swatch {
+  width: 18px;
+  height: 3px;
+}
+
+.swatch--truth {
+  background: #c45100;
+}
+
+.swatch--mc {
+  background: #007a95;
+}
+
+.deposit-dot {
+  display: inline-block;
+  border-radius: 50%;
+  background: #007a95;
+}
+
+.deposit-dot--low {
+  width: 5px;
+  height: 5px;
+  opacity: 0.45;
+}
+
+.deposit-dot--mid {
+  width: 9px;
+  height: 9px;
+  opacity: 0.72;
+}
+
+.deposit-dot--high {
+  width: 13px;
+  height: 13px;
+  border: 3px solid #007a95;
+  background: #ffffff;
+}
+
+.metric-cell {
+  border-color: #dce2e7;
+  border-radius: 2px;
+  background: #fafbfc;
+}
+
+.metric-cell strong {
+  color: #17232d;
+}
+
+.metric-cell small,
+.distribution-label span,
+.distribution-key,
+.chart-legend {
+  color: #5d6b76;
+  font-size: 11px;
+}
+
+.line-chart line {
+  stroke: #e1e6ea;
+}
+
+.line-chart text {
+  fill: #52616d;
+  font-size: 9px;
+}
+
+.line-chart .axis-title {
+  fill: #344550;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.provenance-panel {
+  border-color: #d2d9df;
+  border-radius: 3px;
+  background: #d2d9df;
+}
+
+.provenance-panel div {
+  background: #ffffff;
+}
+
+.provenance-panel code {
+  color: #41515d;
+  font-size: 10px;
+}
+
+.method-grid p {
+  color: #52616d;
+  font-size: 12px;
+}
+
+.method-grid strong {
+  color: #17232d;
+}
+
+footer {
+  color: #596874;
+  font-size: 11px;
+}
+
+.loading-screen {
+  background: #f1f3f5;
+}
+
+.loading-screen p {
+  color: #5b6975;
+}
+
+.loading-orbit {
+  border-color: #bdc8d0;
+  border-top-color: #006d83;
+}
+
+@media (max-width: 760px) {
+  .dashboard-shell {
+    width: min(100% - 24px, 1480px);
+  }
+
+  .science-banner,
+  .decision-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .deposit-key__heading,
+  .deposit-key__content {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+}

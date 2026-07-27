@@ -45,6 +45,7 @@ class ExportTest(unittest.TestCase):
             "epochs": [
                 {
                     "id": "run:joint:0002",
+                    "run_label": "viability-calibrated-fixture",
                     "epoch": 2,
                     "stage": "joint",
                     "path": "epoch.json",
@@ -72,6 +73,17 @@ class ExportTest(unittest.TestCase):
             source, destination = self.fixture(Path(temporary), test_events=1)
             with self.assertRaisesRegex(ValueError, "closed-test gate"):
                 export(source, destination)
+
+    def test_allowlist_keeps_one_calibrated_snapshot_and_removes_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source, destination = self.fixture(Path(temporary))
+            stale = destination / "epochs" / "stale.json.gz"
+            stale.parent.mkdir(parents=True)
+            stale.write_bytes(b"old")
+            manifest = export(source, destination, ["run:joint:0002"])
+            self.assertEqual([row["id"] for row in manifest["epochs"]], ["run:joint:0002"])
+            self.assertEqual(manifest["_removed_stale_epoch_files"], 1)
+            self.assertFalse(stale.exists())
 
 
 if __name__ == "__main__":

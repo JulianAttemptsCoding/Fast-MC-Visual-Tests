@@ -120,7 +120,7 @@ type LoadedSource = {
   manifest: Manifest;
 };
 
-const COLORS = ["#5ce1e6", "#79d5ff", "#8ab4ff", "#b195ff", "#e19cff"];
+const COLORS = ["#007a95", "#1687a0", "#2f91a9", "#479bb1", "#5fa5b9"];
 const DEFAULT_CAMERA: CameraState = { yaw: -0.72, pitch: -0.34, zoom: 1.08 };
 const DATA_ROOT = `${import.meta.env.BASE_URL}data`;
 
@@ -349,22 +349,12 @@ export function ZdcDashboard() {
         : [],
     [source],
   );
-  const runRows = useMemo(
-    () =>
-      source
-        ? source.manifest.epochs.filter(
-            (row) => (row.run_label ?? row.stage) === selectedRun,
-          )
-        : [],
-    [selectedRun, source],
-  );
-
   const profileSeries = useMemo(() => {
     if (!group) return [];
     return [
-      { name: "Geant4", color: "#ff9c63", values: group.geant4.summary.layer_energy_gev },
+      { name: "Geant4 reference", color: "#c45100", values: group.geant4.summary.layer_energy_gev },
       ...group.fast_mc.map((item, index) => ({
-        name: `MC ${index + 1}`,
+        name: `Fast MC ${index + 1}`,
         color: COLORS[index],
         values: item.summary.layer_energy_gev,
       })),
@@ -423,8 +413,8 @@ export function ZdcDashboard() {
             <span />
           </div>
           <div>
-            <p>CBSC · ZDC</p>
-            <h1>Event Observatory</h1>
+            <p>CBSC–ZDC</p>
+            <h1>Visual validation monitor</h1>
           </div>
         </div>
         <div className="topbar-status">
@@ -445,19 +435,20 @@ export function ZdcDashboard() {
 
       <section className="hero-row">
         <div>
-          <p className="eyebrow">MATCHED CONDITIONAL SHOWER REVIEW</p>
+          <p className="eyebrow">CHECKPOINT-LEVEL MATCHED-EVENT QA</p>
           <h2>
-            One Geant4 truth.
+            Geant4 and Fast-MC
             <br />
-            Five stochastic reconstructions.
+            shower comparison
           </h2>
           <p className="hero-copy">
-            The exact same incident neutron four-vector drives every Fast-MC draw.
-            Rotate any detector view to inspect all six in lockstep.
+            One held-out Geant4 event is compared with five independently sampled
+            Fast-MC showers conditioned on the same incident neutron four-vector.
+            Rotate any detector view to inspect all six with a shared camera.
           </p>
         </div>
         <div className="epoch-control">
-          <label htmlFor="run">Training run</label>
+          <label htmlFor="run">Calibrated model</label>
           <select
             id="run"
             value={selectedRun}
@@ -475,22 +466,8 @@ export function ZdcDashboard() {
               </option>
             ))}
           </select>
-          <label htmlFor="epoch">Checkpoint</label>
-          <select
-            id="epoch"
-            value={selectedSnapshot ?? ""}
-            onChange={(event) => setSelectedSnapshot(event.target.value)}
-          >
-            {[...runRows]
-              .reverse()
-              .map((row) => (
-                <option key={snapshotId(row)} value={snapshotId(row)}>
-                  Epoch {row.epoch} · {row.stage} stage
-                </option>
-              ))}
-          </select>
           <div className="epoch-hash">
-            <span>checkpoint</span>
+            <span>accepted checkpoint · epoch {epochRow.epoch}</span>
             <code>{shortHash(epochRow.checkpoint_sha256)}</code>
           </div>
         </div>
@@ -594,7 +571,7 @@ export function ZdcDashboard() {
         <div className="panel-heading">
           <div>
             <p className="eyebrow">3D ENERGY DEPOSITION</p>
-            <h3>Matched detector-space showers</h3>
+            <h3>Deposited energy at active cell centres</h3>
           </div>
           <div className="view-controls">
             <span>drag to rotate · wheel to zoom</span>
@@ -610,7 +587,7 @@ export function ZdcDashboard() {
             geometry={geometry}
             deposit={group.geant4.deposit}
             summary={group.geant4.summary}
-            color="#ff9c63"
+            color="#c45100"
             camera={camera}
             onCameraChange={setCamera}
           />
@@ -628,11 +605,27 @@ export function ZdcDashboard() {
             />
           ))}
         </div>
-        <div className="energy-legend">
-          <span>lower deposited energy</span>
-          <i />
-          <span>higher deposited energy</span>
-          <em>point area and luminance use log energy</em>
+        <div className="deposit-key" aria-label="Detector view marker key">
+          <div className="deposit-key__heading">
+            <strong>Detector-view key</strong>
+            <span>Each panel is normalised to its own largest cell deposit.</span>
+          </div>
+          <div className="deposit-key__content">
+            <div className="deposit-key__series">
+              <span><i className="swatch swatch--truth" />Geant4 reference</span>
+              <span><i className="swatch swatch--mc" />Fast-MC draws 1–5</span>
+            </div>
+            <div className="deposit-key__scale">
+              <span><i className="deposit-dot deposit-dot--low" />Lower relative E</span>
+              <span><i className="deposit-dot deposit-dot--mid" />Medium relative E</span>
+              <span><i className="deposit-dot deposit-dot--high" />Higher relative E</span>
+            </div>
+          </div>
+          <p>
+            Marker radius follows ln(1 + 120 Ecell/Emax); a white core identifies
+            the upper part of that within-panel scale. Use the GeV totals and
+            layer profile for absolute comparisons.
+          </p>
         </div>
       </section>
 
@@ -718,12 +711,14 @@ export function ZdcDashboard() {
         <div className="panel trend-panel">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">ACROSS EPOCHS</p>
-              <h3>Fixed-bank evolution</h3>
+              <p className="eyebrow">SELECTED CALIBRATED CHECKPOINTS</p>
+              <h3>Fixed-bank model comparison</h3>
             </div>
-            <span className="micro-label">{runRows.length} snapshots in this run</span>
+            <span className="micro-label">
+              {source.manifest.epochs.length} models · one checkpoint each
+            </span>
           </div>
-          <EpochTrendChart epochs={runRows} />
+          <EpochTrendChart epochs={source.manifest.epochs} />
         </div>
       </section>
 

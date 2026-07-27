@@ -54,7 +54,11 @@ def validate_artifact(artifact: dict[str, Any], row: dict[str, Any], manifest: d
         raise ValueError(f"{row['path']}: incomplete five-draw event group")
 
 
-def export(source: Path, destination: Path) -> dict[str, Any]:
+def export(
+    source: Path,
+    destination: Path,
+    selected_ids: list[str] | None = None,
+) -> dict[str, Any]:
     manifest_path = source / "manifest.json"
     manifest_bytes = manifest_path.read_bytes()
     manifest = json.loads(manifest_bytes)
@@ -70,8 +74,21 @@ def export(source: Path, destination: Path) -> dict[str, Any]:
         raise ValueError("geometry contract hash mismatch")
     atomic_write(destination / manifest["geometry_path"], geometry_bytes)
 
+    source_rows = manifest["epochs"]
+    if selected_ids is not None:
+        if len(selected_ids) != len(set(selected_ids)):
+            raise ValueError("public selection contains duplicate snapshot IDs")
+        by_id = {row.get("id"): row for row in source_rows}
+        missing = [snapshot_id for snapshot_id in selected_ids if snapshot_id not in by_id]
+        if missing:
+            raise ValueError(f"public selection IDs missing from source manifest: {missing}")
+        source_rows = [by_id[snapshot_id] for snapshot_id in selected_ids]
+        if any("calibrated" not in str(row.get("run_label", "")) for row in source_rows):
+            raise ValueError("public selection contains a non-calibrated run")
+
     public_rows: list[dict[str, Any]] = []
-    for row in manifest["epochs"]:
+    expected_paths: set[str] = set()
+    for row in source_rows:
         raw_path = source / row["path"]
         raw = raw_path.read_bytes()
         if sha256_bytes(raw) != row["sha256"]:
@@ -80,6 +97,7 @@ def export(source: Path, destination: Path) -> dict[str, Any]:
         validate_artifact(artifact, row, manifest)
         compressed = gzip.compress(raw, compresslevel=6, mtime=0)
         relative = f"epochs/{Path(row['path']).name}.gz"
+        expected_paths.add(relative)
         atomic_write(destination / relative, compressed)
         public_row = dict(row)
         public_row["path"] = relative
@@ -93,7 +111,24 @@ def export(source: Path, destination: Path) -> dict[str, Any]:
     public_manifest["geometry_file_sha256"] = sha256_bytes(geometry_bytes)
     public_manifest["source_manifest_sha256"] = sha256_bytes(manifest_bytes)
     public_manifest["epochs"] = public_rows
+    public_manifest["latest_id"] = public_rows[-1]["id"]
+    public_manifest["latest_epoch"] = public_rows[-1]["epoch"]
+    public_manifest["publication_selection"] = {
+        "policy": "one accepted checkpoint per calibrated model family",
+        "snapshot_count": len(public_rows),
+    }
     atomic_write(destination / "manifest.json", canonical_json(public_manifest))
+    epoch_directory = (destination / "epochs").resolve()
+    removed = 0
+    if epoch_directory.exists():
+        for candidate in epoch_directory.glob("*.json.gz"):
+            if candidate.parent.resolve() != epoch_directory:
+                raise ValueError(f"unsafe generated-artifact cleanup target: {candidate}")
+            relative = candidate.relative_to(destination.resolve()).as_posix()
+            if relative not in expected_paths:
+                candidate.unlink()
+                removed += 1
+    public_manifest["_removed_stale_epoch_files"] = removed
     return public_manifest
 
 
@@ -101,12 +136,23 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--destination", required=True, type=Path)
+    parser.add_argument("--selection", type=Path)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    manifest = export(args.source.resolve(), args.destination.resolve())
+    selected_ids = None
+    if args.selection:
+        selection = json.loads(args.selection.resolve().read_text(encoding="utf-8"))
+        if selection.get("schema_version") != 1:
+            raise ValueError("unsupported public selection schema")
+        snapshots = selection.get("snapshots", [])
+        families = [row.get("family") for row in snapshots]
+        if not snapshots or len(families) != len(set(families)):
+            raise ValueError("public selection must contain unique model families")
+        selected_ids = [str(row["id"]) for row in snapshots]
+    manifest = export(args.source.resolve(), args.destination.resolve(), selected_ids)
     compressed = sum(row["compressed_bytes"] for row in manifest["epochs"])
     print(
         json.dumps(
@@ -115,6 +161,7 @@ def main() -> None:
                 "latest_id": manifest.get("latest_id"),
                 "compressed_bytes": compressed,
                 "test_events_used": 0,
+                "removed_stale_epoch_files": manifest.pop("_removed_stale_epoch_files", 0),
                 "qa": "PASS",
             },
             sort_keys=True,

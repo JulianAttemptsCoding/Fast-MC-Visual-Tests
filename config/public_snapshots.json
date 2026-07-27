@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "policy": "one accepted checkpoint per calibrated model family",
+  "snapshots": [
+    {
+      "family": "calibrated_lr3e5",
+      "id": "viability-r1-calibrated-lr3e5:joint:0000",
+      "basis": "only completed checkpoint for this calibrated family"
+    },
+    {
+      "family": "calibrated_lr1e4",
+      "id": "viability-r1-calibrated-lr1e4:joint:0000",
+      "basis": "only completed checkpoint for this calibrated family"
+    },
+    {
+      "family": "calibrated_lr3e4",
+      "id": "viability-wave2-r1-calibrated-lr3e4:joint:0002",
+      "basis": "terminal best validation-loss checkpoint from the frozen continuation"
+    },
+    {
+      "family": "calibrated_lr1e4_halfbatch",
+      "id": "viability-wave2-r1-calibrated-lr1e4-halfbatch:joint:0002",
+      "basis": "terminal best validation-loss checkpoint from the frozen continuation"
+    }
+  ]
+}
