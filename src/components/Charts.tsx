@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 type Series = {
   name: string;
   color: string;
@@ -30,25 +32,170 @@ function pathFor(values: number[], width: number, height: number, maximum: numbe
     .join(" ");
 }
 
+const profileMargin = { left: 72, right: 16, top: 38, bottom: 28 };
+type ProfileScale = "log" | "linear";
+
+function profileLogDomain(series: Series[]) {
+  const positive = series
+    .flatMap((item) => item.values)
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const minimum = Math.min(...positive, 1);
+  const maximum = Math.max(...positive, 1);
+  const minimumExponent = Math.floor(Math.log10(minimum));
+  let maximumExponent = Math.ceil(Math.log10(maximum));
+  if (maximumExponent <= minimumExponent) maximumExponent = minimumExponent + 1;
+
+  const exponentCount = maximumExponent - minimumExponent + 1;
+  const stride = Math.max(1, Math.ceil((exponentCount - 1) / 5));
+  const tickExponents: number[] = [];
+  for (let exponent = minimumExponent; exponent <= maximumExponent; exponent += stride) {
+    tickExponents.push(exponent);
+  }
+  if (tickExponents.at(-1) !== maximumExponent) tickExponents.push(maximumExponent);
+
+  return { minimumExponent, maximumExponent, tickExponents };
+}
+
+function profileLogPath(
+  values: number[],
+  width: number,
+  height: number,
+  minimumExponent: number,
+  maximumExponent: number,
+) {
+  const plotWidth = width - profileMargin.left - profileMargin.right;
+  const plotHeight = height - profileMargin.top - profileMargin.bottom;
+  const exponentSpan = maximumExponent - minimumExponent;
+  const floor = 10 ** minimumExponent;
+  return values
+    .map((value, index) => {
+      const x =
+        profileMargin.left +
+        (index / Math.max(values.length - 1, 1)) * plotWidth;
+      const safeValue = Number.isFinite(value) && value > 0 ? value : floor;
+      const fraction =
+        (Math.log10(Math.max(safeValue, floor)) - minimumExponent) / exponentSpan;
+      const y = profileMargin.top + (1 - fraction) * plotHeight;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+}
+
+function profileLinearDomain(series: Series[]) {
+  const maximum = Math.max(
+    ...series.flatMap((item) =>
+      item.values.filter((value) => Number.isFinite(value) && value >= 0),
+    ),
+    1,
+  );
+  const tickValues = [0, 0.25, 0.5, 0.75, 1].map(
+    (fraction) => fraction * maximum,
+  );
+  return { maximum, tickValues };
+}
+
+function profileLinearPath(
+  values: number[],
+  width: number,
+  height: number,
+  maximum: number,
+) {
+  const plotWidth = width - profileMargin.left - profileMargin.right;
+  const plotHeight = height - profileMargin.top - profileMargin.bottom;
+  return values
+    .map((value, index) => {
+      const x =
+        profileMargin.left +
+        (index / Math.max(values.length - 1, 1)) * plotWidth;
+      const safeValue = Number.isFinite(value) ? Math.max(value, 0) : 0;
+      const y =
+        profileMargin.top +
+        (1 - Math.min(safeValue / maximum, 1)) * plotHeight;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+}
+
+function formatLogTick(exponent: number) {
+  if (exponent === 0) return "1";
+  if (exponent === 1) return "10";
+  if (exponent === 2) return "100";
+  if (exponent === -1) return "0.1";
+  if (exponent === -2) return "0.01";
+  return `1e${exponent}`;
+}
+
+function formatLinearTick(value: number) {
+  if (value >= 100) return value.toFixed(0);
+  if (value >= 10) return value.toFixed(1);
+  if (value >= 1) return value.toFixed(2);
+  return value.toPrecision(2);
+}
+
 export function LayerProfileChart({ series }: { series: Series[] }) {
+  const [scale, setScale] = useState<ProfileScale>("log");
   const width = 780;
   const height = 260;
-  const maximum = Math.max(...series.flatMap((item) => item.values), 1e-9);
+  const { minimumExponent, maximumExponent, tickExponents } =
+    profileLogDomain(series);
+  const { maximum: linearMaximum, tickValues: linearTickValues } =
+    profileLinearDomain(series);
+  const plotHeight = height - profileMargin.top - profileMargin.bottom;
+  const exponentSpan = maximumExponent - minimumExponent;
+  const isLog = scale === "log";
   return (
     <div className="chart-wrap">
+      <div className="chart-scale-controls">
+        <span>Vertical scale</span>
+        <div
+          className="chart-scale-toggle"
+          role="group"
+          aria-label="Layer energy vertical scale"
+        >
+          <button
+            type="button"
+            aria-pressed={isLog}
+            onClick={() => setScale("log")}
+          >
+            Log
+          </button>
+          <button
+            type="button"
+            aria-pressed={!isLog}
+            onClick={() => setScale("linear")}
+          >
+            Linear
+          </button>
+        </div>
+      </div>
       <svg
         className="line-chart"
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label="Longitudinal deposited energy by detector layer"
+        aria-label={`Longitudinal deposited energy by detector layer on a ${
+          isLog ? "base-10 logarithmic" : "linear"
+        } scale`}
       >
-        {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
-          const y = height - 22 - fraction * (height - 40);
+        {(isLog ? tickExponents : linearTickValues).map((tick) => {
+          const fraction = isLog
+            ? (tick - minimumExponent) / exponentSpan
+            : tick / linearMaximum;
+          const y = profileMargin.top + (1 - fraction) * plotHeight;
           return (
-            <g key={fraction}>
-              <line x1="24" x2={width - 14} y1={y} y2={y} />
-              <text x="22" y={y - 4}>
-                {(maximum * fraction).toFixed(1)}
+            <g key={`${scale}-${tick}`}>
+              <line
+                x1={profileMargin.left}
+                x2={width - profileMargin.right}
+                y1={y}
+                y2={y}
+              />
+              <text
+                x={profileMargin.left - 10}
+                y={y}
+                textAnchor="end"
+                dominantBaseline="middle"
+              >
+                {isLog ? formatLogTick(tick) : formatLinearTick(tick)}
               </text>
             </g>
           );
@@ -56,15 +203,32 @@ export function LayerProfileChart({ series }: { series: Series[] }) {
         {series.map((item) => (
           <path
             key={item.name}
-            d={pathFor(item.values, width, height, maximum)}
+            d={
+              isLog
+                ? profileLogPath(
+                    item.values,
+                    width,
+                    height,
+                    minimumExponent,
+                    maximumExponent,
+                  )
+                : profileLinearPath(item.values, width, height, linearMaximum)
+            }
             stroke={item.color}
             className={item.name === "Geant4" ? "truth-line" : ""}
           />
         ))}
-        <text className="axis-title" x="24" y="12">
-          deposited energy [GeV]
+        <text className="axis-title" x={profileMargin.left} y="16">
+          {isLog
+            ? "deposited energy per layer [GeV] · log10 scale · zero at floor"
+            : "deposited energy per layer [GeV] · linear scale"}
         </text>
-        <text className="axis-label" x={width - 14} y={height - 6} textAnchor="end">
+        <text
+          className="axis-label"
+          x={width - profileMargin.right}
+          y={height - 5}
+          textAnchor="end"
+        >
           detector layer
         </text>
       </svg>

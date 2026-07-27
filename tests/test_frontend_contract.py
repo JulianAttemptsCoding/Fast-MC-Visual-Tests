@@ -25,6 +25,18 @@ class FrontendContractTest(unittest.TestCase):
         self.assertNotIn("sample mean longitudinal relative L1", source)
         self.assertNotIn('label="Snapshot"', source)
 
+    def test_longitudinal_chart_uses_nonoverlapping_switchable_scale(self) -> None:
+        source = (ROOT / "src" / "components" / "Charts.tsx").read_text(encoding="utf-8")
+        self.assertIn("Math.log10", source)
+        self.assertIn("base-10 logarithmic", source)
+        self.assertIn("log10 scale · zero at floor", source)
+        self.assertIn('useState<ProfileScale>("log")', source)
+        self.assertIn('onClick={() => setScale("linear")}', source)
+        self.assertIn("linear scale", source)
+        self.assertIn("left: 72", source)
+        self.assertIn('textAnchor="end"', source)
+        self.assertIn('dominantBaseline="middle"', source)
+
 
 if __name__ == "__main__":
     unittest.main()
