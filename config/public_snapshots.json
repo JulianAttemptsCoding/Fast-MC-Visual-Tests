@@ -4,12 +4,12 @@
   "snapshots": [
     {
       "family": "calibrated_lr3e5",
-      "id": "compute-extension-r1-calibrated-lr3e5:joint:0002",
+      "id": "compute-extension-r2-calibrated-lr3e5:joint:0004",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr1e4",
-      "id": "compute-extension-r1-calibrated-lr1e4:joint:0002",
+      "id": "compute-extension-r2-calibrated-lr1e4:joint:0004",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
