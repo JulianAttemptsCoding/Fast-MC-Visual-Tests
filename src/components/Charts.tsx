@@ -153,7 +153,7 @@ export function EpochTrendChart({ epochs }: { epochs: Epoch[] }) {
       values: ordered.map((row) => Math.abs(row.trend.hit_count_bias_fraction)),
     },
     {
-      name: "Longitudinal profile relative L1",
+      name: "Longitudinal shower-profile error",
       color: "#b195ff",
       values: ordered.map((row) => row.trend.mean_longitudinal_profile_relative_l1),
     },

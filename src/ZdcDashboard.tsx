@@ -481,12 +481,6 @@ export function ZdcDashboard() {
       </section>
       <section className="stats-grid" aria-label="Epoch summary">
         <StatCard
-          label="Snapshot"
-          value={`E${String(artifact.epoch).padStart(2, "0")}`}
-          detail={`${artifact.stage} stage · QA ${artifact.qa.pass ? "pass" : "fail"}`}
-          accent
-        />
-        <StatCard
           label="Comparison bank"
           value={`${artifact.sample_count} × ${artifact.draws_per_condition}`}
           detail="validation truths × conditional draws"
@@ -497,9 +491,9 @@ export function ZdcDashboard() {
           detail={`${artifact.aggregate.trend.generated_response_mean_gev.toFixed(2)} vs ${artifact.aggregate.trend.truth_response_mean_gev.toFixed(2)} GeV`}
         />
         <StatCard
-          label="Profile distance"
-          value={artifact.aggregate.trend.mean_longitudinal_profile_relative_l1.toFixed(3)}
-          detail="sample mean longitudinal relative L1"
+          label="Longitudinal shower-profile error"
+          value={`${(artifact.aggregate.trend.mean_longitudinal_profile_relative_l1 * 100).toFixed(1)}%`}
+          detail="Mean FastMC–Geant4 layer-energy mismatch across all 65 ZDC layers · 0% is identical"
         />
       </section>
 

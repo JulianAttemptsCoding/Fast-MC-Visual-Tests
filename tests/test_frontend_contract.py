@@ -19,6 +19,11 @@ class FrontendContractTest(unittest.TestCase):
         self.assertIn("normalised to its own largest cell deposit", source)
         self.assertIn("one checkpoint each", source)
         self.assertNotIn("A100 SCREENING · NO-GO", source)
+        self.assertIn("Longitudinal shower-profile error", source)
+        self.assertIn("Mean FastMC–Geant4 layer-energy mismatch across all 65 ZDC layers", source)
+        self.assertIn("0% is identical", source)
+        self.assertNotIn("sample mean longitudinal relative L1", source)
+        self.assertNotIn('label="Snapshot"', source)
 
 
 if __name__ == "__main__":
