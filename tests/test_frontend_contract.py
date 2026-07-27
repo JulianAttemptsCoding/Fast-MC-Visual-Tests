@@ -18,7 +18,7 @@ class FrontendContractTest(unittest.TestCase):
         self.assertIn("Detector-view key", source)
         self.assertIn("normalised to its own largest cell deposit", source)
         self.assertIn("one checkpoint each", source)
-        self.assertIn("A100 SCREENING · NO-GO", source)
+        self.assertNotIn("A100 SCREENING · NO-GO", source)
 
 
 if __name__ == "__main__":

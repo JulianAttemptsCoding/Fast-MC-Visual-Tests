@@ -479,17 +479,6 @@ export function ZdcDashboard() {
         <strong>{artifact.synthetic_source ? "INTERFACE QA ONLY" : "SCIENTIFIC BOUNDARY"}</strong>
         <span>{artifact.scientific_status}</span>
       </section>
-      {selectedRun.startsWith("viability-wave2") && (
-        <section className="decision-banner">
-          <strong>A100 SCREENING · NO-GO</strong>
-          <span>
-            The frozen two-epoch protocol did not meet its predeclared fidelity gate.
-            These matched showers remain useful for visual diagnosis, not a claim of
-            Geant4-equivalent physics.
-          </span>
-        </section>
-      )}
-
       <section className="stats-grid" aria-label="Epoch summary">
         <StatCard
           label="Snapshot"
