@@ -208,29 +208,70 @@ function StatCard({
 
 function MetricCell({
   label,
+  explanation,
+  equation,
+  variables,
+  interpretation,
   truth,
   generated,
   unit = "",
+  format = "decimal",
 }: {
   label: string;
+  explanation: string;
+  equation: string;
+  variables: string;
+  interpretation: string;
   truth: number;
   generated: number[];
   unit?: string;
+  format?: "decimal" | "integer" | "percent";
 }) {
   const mean = generated.reduce((sum, value) => sum + value, 0) / generated.length;
   const delta = mean - truth;
+
+  const formatValue = (value: number) => {
+    if (format === "integer") return Math.round(value).toLocaleString();
+    if (format === "percent") return `${(value * 100).toFixed(1)}%`;
+    return `${value.toFixed(2)}${unit}`;
+  };
+
+  const formatDifference = (value: number) => {
+    const sign = value >= 0 ? "+" : "−";
+    const magnitude = Math.abs(value);
+    if (format === "integer") return `${sign}${magnitude.toFixed(1)} cells`;
+    if (format === "percent") return `${sign}${(magnitude * 100).toFixed(1)} percentage points`;
+    return `${sign}${magnitude.toFixed(2)}${unit}`;
+  };
+
   return (
     <div className="metric-cell">
-      <span>{label}</span>
-      <strong>
-        {truth.toFixed(label === "Hit count" ? 0 : 2)}
-        {unit}
-      </strong>
-      <small>
-        MC μ {mean.toFixed(label === "Hit count" ? 1 : 2)}
-        {unit} · Δ {delta >= 0 ? "+" : ""}
-        {delta.toFixed(2)}
-      </small>
+      <div className="metric-cell__heading">
+        <h4>{label}</h4>
+        <p>{explanation}</p>
+      </div>
+      <dl className="metric-comparison">
+        <div>
+          <dt>Geant4 reference</dt>
+          <dd>{formatValue(truth)}</dd>
+        </div>
+        <div>
+          <dt>Fast MC average (5 showers)</dt>
+          <dd>{formatValue(mean)}</dd>
+        </div>
+        <div>
+          <dt>Difference: Fast MC − Geant4</dt>
+          <dd className={Math.abs(delta) < 1e-12 ? "" : delta > 0 ? "is-positive" : "is-negative"}>
+            {formatDifference(delta)}
+          </dd>
+        </div>
+      </dl>
+      <div className="metric-formula">
+        <span>How it is calculated</span>
+        <code>{equation}</code>
+        <p>{variables}</p>
+      </div>
+      <p className="metric-interpretation">{interpretation}</p>
     </div>
   );
 }
@@ -612,7 +653,7 @@ export function ZdcDashboard() {
         </div>
       </section>
 
-      <section className="analysis-grid">
+      <section className="analysis-grid analysis-grid--event">
         <div className="panel profile-panel">
           <div className="panel-heading">
             <div>
@@ -628,42 +669,82 @@ export function ZdcDashboard() {
           <div className="panel-heading">
             <div>
               <p className="eyebrow">EVENT RECONSTRUCTION</p>
-              <h3>Truth versus five-draw mean</h3>
+              <h3>How one Geant4 shower compares with five Fast-MC showers</h3>
             </div>
+          </div>
+          <div className="metric-reading-guide">
+            <p>
+              The selected neutron has one fixed four-momentum input. Geant4 provides
+              one reference shower for that input; Fast MC independently generates five
+              possible showers from the same input.
+            </p>
+            <p>
+              Each card compares the <strong>Geant4 reference</strong> with the
+              <strong> average of those five Fast-MC showers</strong>. The reported
+              difference is always <strong>Fast MC average − Geant4</strong>: a positive
+              value means Fast MC produced more, and a negative value means it produced less.
+            </p>
           </div>
           <div className="metric-grid">
             <MetricCell
-              label="Total response"
+              label="Total deposited energy"
+              explanation="How much energy the entire ZDC recorded from this neutron."
+              equation="T = Σᵢ Eᵢ"
+              variables="Eᵢ is the deposited energy in ZDC readout cell i. The sum runs over all 6,790 cells. T is the resulting total deposited energy."
+              interpretation="Larger T means the shower deposited more energy in the detector."
               truth={group.geant4.summary.total_response_gev}
               generated={group.fast_mc.map((item) => item.summary.total_response_gev)}
               unit=" GeV"
             />
             <MetricCell
-              label="Hit count"
+              label="Cells containing deposited energy"
+              explanation="How many ZDC readout cells received a nonzero energy deposit."
+              equation="Nhit = Σᵢ 1(Eᵢ > 0)"
+              variables="1(Eᵢ > 0) equals 1 when cell i contains deposited energy and 0 otherwise. Adding these indicators gives Nhit, the number of hit cells."
+              interpretation="A larger count usually indicates a shower spread across more readout cells."
               truth={group.geant4.summary.hit_count}
               generated={group.fast_mc.map((item) => item.summary.hit_count)}
+              format="integer"
             />
             <MetricCell
-              label="Depth centroid"
+              label="Energy-weighted shower depth"
+              explanation="The average detector layer reached by the shower, weighted by energy."
+              equation="L̄ = (Σₗ l · Eₗ) / T"
+              variables="l is the layer number from 0 to 64. Eₗ is the total energy deposited in layer l, and T is the total deposited energy in all layers."
+              interpretation="A larger L̄ means the shower’s energy is centred deeper inside the ZDC."
               truth={group.geant4.summary.depth_centroid_layer}
               generated={group.fast_mc.map((item) => item.summary.depth_centroid_layer)}
-              unit=" L"
+              unit=" layers"
             />
             <MetricCell
-              label="Radial RMS"
+              label="Transverse shower width"
+              explanation="How widely the shower energy spreads sideways around its energy-weighted centre."
+              equation="rRMS = √[Σᵢ Eᵢ((xᵢ−x̄)² + (yᵢ−ȳ)²) / T]"
+              variables="(xᵢ, yᵢ) is cell i’s transverse position. (x̄, ȳ) is the energy-weighted shower centre, Eᵢ is that cell’s deposited energy, and T is total deposited energy."
+              interpretation="A larger radial RMS means a wider shower in the plane perpendicular to the beam."
               truth={group.geant4.summary.radial_rms_mm}
               generated={group.fast_mc.map((item) => item.summary.radial_rms_mm)}
               unit=" mm"
             />
             <MetricCell
-              label="ECAL fraction"
+              label="Fraction deposited in the ECAL"
+              explanation="What share of the total shower energy was deposited in the front electromagnetic calorimeter layer."
+              equation="fECAL = E₀ / T"
+              variables="E₀ is the energy deposited in layer 0, the ECAL. T is the total deposited energy across the full ZDC."
+              interpretation="For example, 14% means that 14% of this shower’s deposited energy was in the ECAL."
               truth={group.geant4.summary.ecal_fraction}
               generated={group.fast_mc.map((item) => item.summary.ecal_fraction)}
+              format="percent"
             />
             <MetricCell
-              label="Late fraction"
+              label="Fraction deposited in the final quarter"
+              explanation="What share of the shower energy appears in the deepest quarter of the detector."
+              equation="flate = (Σₗ₌₄₈⁶⁴ Eₗ) / T"
+              variables="Eₗ is the energy in layer l. Layers 48 through 64 are the final quarter of this 65-layer ZDC, and T is total deposited energy."
+              interpretation="A larger value indicates a longer shower tail reaching the back of the detector."
               truth={group.geant4.summary.late_fraction}
               generated={group.fast_mc.map((item) => item.summary.late_fraction)}
+              format="percent"
             />
           </div>
         </div>

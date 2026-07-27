@@ -25,6 +25,19 @@ class FrontendContractTest(unittest.TestCase):
         self.assertNotIn("sample mean longitudinal relative L1", source)
         self.assertNotIn('label="Snapshot"', source)
 
+    def test_event_metrics_define_comparison_equations_and_variables(self) -> None:
+        source = (ROOT / "src" / "ZdcDashboard.tsx").read_text(encoding="utf-8")
+        self.assertIn("Fast MC average − Geant4", source)
+        self.assertIn("one fixed four-momentum input", source)
+        self.assertIn("T = Σᵢ Eᵢ", source)
+        self.assertIn("Nhit = Σᵢ 1(Eᵢ > 0)", source)
+        self.assertIn("L̄ = (Σₗ l · Eₗ) / T", source)
+        self.assertIn("rRMS = √[Σᵢ Eᵢ", source)
+        self.assertIn("fECAL = E₀ / T", source)
+        self.assertIn("flate = (Σₗ₌₄₈⁶⁴ Eₗ) / T", source)
+        self.assertIn("Fast MC average (5 showers)", source)
+        self.assertNotIn("MC μ", source)
+
     def test_longitudinal_chart_uses_nonoverlapping_switchable_scale(self) -> None:
         source = (ROOT / "src" / "components" / "Charts.tsx").read_text(encoding="utf-8")
         self.assertIn("Math.log10", source)
