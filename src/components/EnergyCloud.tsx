@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 type Geometry = {
   positions_mm: number[][];
@@ -223,7 +223,7 @@ export function EnergyCloud({
     [],
   );
 
-  const scheduleCamera = (next: CameraState) => {
+  const scheduleCamera = useCallback((next: CameraState) => {
     pendingCameraRef.current = next;
     cameraRef.current = next;
     if (cameraFrameRef.current !== null) return;
@@ -233,7 +233,23 @@ export function EnergyCloud({
       pendingCameraRef.current = null;
       if (pending) onCameraChange(pending);
     });
-  };
+  }, [onCameraChange]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const current = pendingCameraRef.current ?? cameraRef.current;
+      scheduleCamera({
+        ...current,
+        zoom: Math.max(0.55, Math.min(2.4, current.zoom * Math.exp(-event.deltaY * 0.001))),
+      });
+    };
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", handleWheel);
+  }, [scheduleCamera]);
 
   return (
     <article className="cloud-card" style={{ "--cloud-color": color } as React.CSSProperties}>
@@ -271,14 +287,6 @@ export function EnergyCloud({
         }}
         onPointerCancel={() => {
           dragRef.current = null;
-        }}
-        onWheel={(event) => {
-          event.preventDefault();
-          const current = pendingCameraRef.current ?? cameraRef.current;
-          scheduleCamera({
-            ...current,
-            zoom: Math.max(0.55, Math.min(2.4, current.zoom * Math.exp(-event.deltaY * 0.001))),
-          });
         }}
       />
     </article>

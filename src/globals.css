@@ -633,6 +633,52 @@ input[type="range"] {
   background: #f3f7f8;
 }
 
+.comparison-context {
+  display: grid;
+  grid-template-columns: 1fr 36px 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 12px;
+}
+
+.comparison-context > div:not(.comparison-context__arrow) {
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 1px solid #d9e1e6;
+  background: #ffffff;
+}
+
+.comparison-context > div span {
+  color: #006078;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.comparison-context > div strong {
+  color: #17232d;
+  font-size: 14px;
+}
+
+.comparison-context > div small {
+  color: #5a6974;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.comparison-context__input {
+  border-left: 3px solid #273f50 !important;
+}
+
+.comparison-context__arrow {
+  display: grid;
+  place-items: center;
+  color: #607784;
+  font-size: 22px;
+}
+
 .metric-reading-guide p {
   margin: 0;
   color: #465761;
@@ -640,9 +686,33 @@ input[type="range"] {
   line-height: 1.55;
 }
 
+.metric-equation-note {
+  margin: 0 0 14px;
+  color: #5c6974;
+  font-size: 11px;
+}
+
 .metric-cell__heading {
   display: grid;
   gap: 7px;
+}
+
+.metric-cell__heading > span {
+  color: #006078;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.metric-result {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid #006d83;
+  background: #edf4f6;
+  color: #173b49;
+  font-size: 13px;
+  font-weight: 620;
+  line-height: 1.45;
 }
 
 .metric-cell__heading h4 {
@@ -1365,6 +1435,14 @@ body {
   .metric-grid,
   .metric-reading-guide {
     grid-template-columns: 1fr;
+  }
+
+  .comparison-context {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-context__arrow {
+    transform: rotate(90deg);
   }
 
   .metric-cell {

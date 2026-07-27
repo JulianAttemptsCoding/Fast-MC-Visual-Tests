@@ -12,6 +12,10 @@ class FrontendContractTest(unittest.TestCase):
         self.assertIn("requestAnimationFrame", source)
         self.assertIn("Math.min(window.devicePixelRatio || 1, 1.25)", source)
         self.assertIn("context.globalCompositeOperation = \"lighter\"", source)
+        self.assertIn('addEventListener("wheel", handleWheel, { passive: false })', source)
+        self.assertIn("event.preventDefault()", source)
+        self.assertIn("event.stopPropagation()", source)
+        self.assertNotIn("onWheel=", source)
 
     def test_public_interface_explains_scale_and_selection(self) -> None:
         source = (ROOT / "src" / "ZdcDashboard.tsx").read_text(encoding="utf-8")
@@ -28,7 +32,7 @@ class FrontendContractTest(unittest.TestCase):
     def test_event_metrics_define_comparison_equations_and_variables(self) -> None:
         source = (ROOT / "src" / "ZdcDashboard.tsx").read_text(encoding="utf-8")
         self.assertIn("Fast MC average − Geant4", source)
-        self.assertIn("one fixed four-momentum input", source)
+        self.assertIn("One fixed neutron four-momentum input", source)
         self.assertIn("T = Σᵢ Eᵢ", source)
         self.assertIn("Nhit = Σᵢ 1(Eᵢ > 0)", source)
         self.assertIn("L̄ = (Σₗ l · Eₗ) / T", source)
@@ -37,6 +41,10 @@ class FrontendContractTest(unittest.TestCase):
         self.assertIn("flate = (Σₗ₌₄₈⁶⁴ Eₗ) / T", source)
         self.assertIn("Fast MC average (5 showers)", source)
         self.assertNotIn("MC μ", source)
+        self.assertIn("Six simple ways to describe a ZDC shower", source)
+        self.assertIn("Particle showers are random", source)
+        self.assertIn("HOW MUCH ENERGY?", source)
+        self.assertIn("HOW MUCH AT THE BACK?", source)
 
     def test_longitudinal_chart_uses_nonoverlapping_switchable_scale(self) -> None:
         source = (ROOT / "src" / "components" / "Charts.tsx").read_text(encoding="utf-8")

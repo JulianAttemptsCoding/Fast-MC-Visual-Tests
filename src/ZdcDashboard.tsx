@@ -208,20 +208,24 @@ function StatCard({
 
 function MetricCell({
   label,
+  question,
   explanation,
   equation,
   variables,
   interpretation,
+  comparisonKind,
   truth,
   generated,
   unit = "",
   format = "decimal",
 }: {
   label: string;
+  question: string;
   explanation: string;
   equation: string;
   variables: string;
   interpretation: string;
+  comparisonKind: "energy" | "count" | "depth" | "width" | "fraction";
   truth: number;
   generated: number[];
   unit?: string;
@@ -244,12 +248,44 @@ function MetricCell({
     return `${sign}${magnitude.toFixed(2)}${unit}`;
   };
 
+  const describeDifference = () => {
+    if (Math.abs(delta) < 1e-12) {
+      return "The Fast-MC average and Geant4 have the same value for this summary.";
+    }
+    if (comparisonKind === "depth") {
+      return `The Fast-MC shower centre is ${Math.abs(delta).toFixed(1)} layers ${
+        delta > 0 ? "deeper in the detector" : "closer to the detector front"
+      } than the Geant4 shower.`;
+    }
+    if (comparisonKind === "fraction") {
+      return `Fast MC places ${Math.abs(delta * 100).toFixed(1)} percentage points ${
+        delta > 0 ? "more" : "less"
+      } of the shower energy in this detector region than Geant4.`;
+    }
+    const percent = Math.abs(truth) > 1e-12 ? (Math.abs(delta) / Math.abs(truth)) * 100 : null;
+    if (comparisonKind === "count") {
+      return `The Fast-MC average lights up ${Math.abs(delta).toFixed(0)} ${
+        delta > 0 ? "more" : "fewer"
+      } cells than Geant4${percent === null ? "" : ` (${percent.toFixed(0)}% difference)`}.`;
+    }
+    if (comparisonKind === "width") {
+      return `The Fast-MC shower is ${Math.abs(delta).toFixed(1)} mm ${
+        delta > 0 ? "wider" : "narrower"
+      } than the Geant4 shower${percent === null ? "" : ` (${percent.toFixed(0)}% difference)`}.`;
+    }
+    return `The Fast-MC average deposits ${percent === null ? `${Math.abs(delta).toFixed(2)} GeV` : `${percent.toFixed(0)}%`} ${
+      delta > 0 ? "more" : "less"
+    } energy than the Geant4 shower.`;
+  };
+
   return (
     <div className="metric-cell">
       <div className="metric-cell__heading">
+        <span>{question}</span>
         <h4>{label}</h4>
         <p>{explanation}</p>
       </div>
+      <p className="metric-result">{describeDifference()}</p>
       <dl className="metric-comparison">
         <div>
           <dt>Geant4 reference</dt>
@@ -260,14 +296,14 @@ function MetricCell({
           <dd>{formatValue(mean)}</dd>
         </div>
         <div>
-          <dt>Difference: Fast MC − Geant4</dt>
+          <dt>Difference: Fast MC average − Geant4</dt>
           <dd className={Math.abs(delta) < 1e-12 ? "" : delta > 0 ? "is-positive" : "is-negative"}>
             {formatDifference(delta)}
           </dd>
         </div>
       </dl>
       <div className="metric-formula">
-        <span>How it is calculated</span>
+        <span>Equation</span>
         <code>{equation}</code>
         <p>{variables}</p>
       </div>
@@ -669,79 +705,114 @@ export function ZdcDashboard() {
           <div className="panel-heading">
             <div>
               <p className="eyebrow">EVENT RECONSTRUCTION</p>
-              <h3>How one Geant4 shower compares with five Fast-MC showers</h3>
+              <h3>Six simple ways to describe a ZDC shower</h3>
+            </div>
+          </div>
+          <div className="comparison-context" aria-label="How this comparison works">
+            <div className="comparison-context__input">
+              <span>Same starting point</span>
+              <strong>One fixed neutron four-momentum input</strong>
+              <small>Its energy and direction entering the ZDC</small>
+            </div>
+            <div className="comparison-context__arrow" aria-hidden="true">→</div>
+            <div>
+              <span>Detailed simulation</span>
+              <strong>1 Geant4 shower</strong>
+              <small>The reference event shown in orange</small>
+            </div>
+            <div>
+              <span>Machine-learning model</span>
+              <strong>5 Fast-MC showers</strong>
+              <small>Five independent possibilities shown in blue</small>
             </div>
           </div>
           <div className="metric-reading-guide">
             <p>
-              The selected neutron has one fixed four-momentum input. Geant4 provides
-              one reference shower for that input; Fast MC independently generates five
-              possible showers from the same input.
+              <strong>What is being measured?</strong> The ZDC has 6,790 readout cells
+              arranged from front to back in 65 layers. A shower leaves some energy in
+              each cell. These six summaries describe how much energy was left and where
+              it was distributed.
             </p>
             <p>
-              Each card compares the <strong>Geant4 reference</strong> with the
-              <strong> average of those five Fast-MC showers</strong>. The reported
-              difference is always <strong>Fast MC average − Geant4</strong>: a positive
-              value means Fast MC produced more, and a negative value means it produced less.
+              <strong>Why are the showers different?</strong> Particle showers are random.
+              Fast MC is not expected to copy this one Geant4 event cell-for-cell. The useful
+              question is whether many Fast-MC showers reproduce the same distributions as
+              many Geant4 showers. Five draws here are a visual check, not a physics verdict.
             </p>
           </div>
+          <p className="metric-equation-note">
+            Read the bold comparison sentence first. Equations are included below each
+            card so the displayed number can be reproduced exactly.
+          </p>
           <div className="metric-grid">
             <MetricCell
               label="Total deposited energy"
-              explanation="How much energy the entire ZDC recorded from this neutron."
+              question="1 · HOW MUCH ENERGY?"
+              explanation="Energy left inside the ZDC by the full shower. This is not the neutron’s incoming energy; most incoming energy may leave the modeled readout or go into invisible processes."
               equation="T = Σᵢ Eᵢ"
               variables="Eᵢ is the deposited energy in ZDC readout cell i. The sum runs over all 6,790 cells. T is the resulting total deposited energy."
               interpretation="Larger T means the shower deposited more energy in the detector."
+              comparisonKind="energy"
               truth={group.geant4.summary.total_response_gev}
               generated={group.fast_mc.map((item) => item.summary.total_response_gev)}
               unit=" GeV"
             />
             <MetricCell
               label="Cells containing deposited energy"
-              explanation="How many ZDC readout cells received a nonzero energy deposit."
+              question="2 · HOW MANY CELLS?"
+              explanation="The number of readout cells that contain any positive deposited energy in this raw simulation output."
               equation="Nhit = Σᵢ 1(Eᵢ > 0)"
               variables="1(Eᵢ > 0) equals 1 when cell i contains deposited energy and 0 otherwise. Adding these indicators gives Nhit, the number of hit cells."
               interpretation="A larger count usually indicates a shower spread across more readout cells."
+              comparisonKind="count"
               truth={group.geant4.summary.hit_count}
               generated={group.fast_mc.map((item) => item.summary.hit_count)}
               format="integer"
             />
             <MetricCell
               label="Energy-weighted shower depth"
-              explanation="The average detector layer reached by the shower, weighted by energy."
+              question="3 · HOW DEEP?"
+              explanation="The shower’s front-to-back centre. Layers near 0 are at the detector front; layer 64 is at the back."
               equation="L̄ = (Σₗ l · Eₗ) / T"
               variables="l is the layer number from 0 to 64. Eₗ is the total energy deposited in layer l, and T is the total deposited energy in all layers."
               interpretation="A larger L̄ means the shower’s energy is centred deeper inside the ZDC."
+              comparisonKind="depth"
               truth={group.geant4.summary.depth_centroid_layer}
               generated={group.fast_mc.map((item) => item.summary.depth_centroid_layer)}
               unit=" layers"
             />
             <MetricCell
               label="Transverse shower width"
-              explanation="How widely the shower energy spreads sideways around its energy-weighted centre."
+              question="4 · HOW WIDE?"
+              explanation="The typical sideways distance of deposited energy from the shower centre, viewed across the face of the detector."
               equation="rRMS = √[Σᵢ Eᵢ((xᵢ−x̄)² + (yᵢ−ȳ)²) / T]"
               variables="(xᵢ, yᵢ) is cell i’s transverse position. (x̄, ȳ) is the energy-weighted shower centre, Eᵢ is that cell’s deposited energy, and T is total deposited energy."
               interpretation="A larger radial RMS means a wider shower in the plane perpendicular to the beam."
+              comparisonKind="width"
               truth={group.geant4.summary.radial_rms_mm}
               generated={group.fast_mc.map((item) => item.summary.radial_rms_mm)}
               unit=" mm"
             />
             <MetricCell
               label="Fraction deposited in the ECAL"
-              explanation="What share of the total shower energy was deposited in the front electromagnetic calorimeter layer."
+              question="5 · HOW MUCH AT THE FRONT?"
+              explanation="The percentage of deposited energy found in layer 0, the electromagnetic calorimeter at the front of this ZDC."
               equation="fECAL = E₀ / T"
               variables="E₀ is the energy deposited in layer 0, the ECAL. T is the total deposited energy across the full ZDC."
               interpretation="For example, 14% means that 14% of this shower’s deposited energy was in the ECAL."
+              comparisonKind="fraction"
               truth={group.geant4.summary.ecal_fraction}
               generated={group.fast_mc.map((item) => item.summary.ecal_fraction)}
               format="percent"
             />
             <MetricCell
               label="Fraction deposited in the final quarter"
-              explanation="What share of the shower energy appears in the deepest quarter of the detector."
+              question="6 · HOW MUCH AT THE BACK?"
+              explanation="The percentage of deposited energy found in layers 48–64, the deepest quarter of the ZDC."
               equation="flate = (Σₗ₌₄₈⁶⁴ Eₗ) / T"
               variables="Eₗ is the energy in layer l. Layers 48 through 64 are the final quarter of this 65-layer ZDC, and T is total deposited energy."
               interpretation="A larger value indicates a longer shower tail reaching the back of the detector."
+              comparisonKind="fraction"
               truth={group.geant4.summary.late_fraction}
               generated={group.fast_mc.map((item) => item.summary.late_fraction)}
               format="percent"
