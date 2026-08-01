@@ -1,25 +1,26 @@
 {
   "schema_version": 1,
   "policy": "one accepted checkpoint per calibrated model family",
+  "source_run": "dicos-r3, the six-epoch continuation on DiCOS covering absolute epochs 5-10",
   "snapshots": [
     {
       "family": "calibrated_lr3e5",
-      "id": "compute-extension-r2-calibrated-lr3e5:joint:0004",
+      "id": "dicos-r3-calibrated-lr3e5:joint:0008",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr1e4",
-      "id": "compute-extension-r2-calibrated-lr1e4:joint:0004",
+      "id": "dicos-r3-calibrated-lr1e4:joint:0008",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr3e4",
-      "id": "compute-extension-r1-calibrated-lr3e4:joint:0004",
+      "id": "dicos-r3-calibrated-lr3e4:joint:0010",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr1e4_halfbatch",
-      "id": "compute-extension-r1-calibrated-lr1e4-halfbatch:joint:0004",
+      "id": "dicos-r3-calibrated-lr1e4-halfbatch:joint:0010",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     }
   ]
