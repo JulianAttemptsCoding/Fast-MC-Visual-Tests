@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "policy": "one accepted checkpoint per calibrated model family",
-  "source_run": "dicos-r3, the six-epoch continuation on DiCOS covering absolute epochs 5-10",
+  "source_run": "dicos-p6 and dicos-p7, six-epoch continuations run 2026-08-03 on the RTX 4090, RTX 3090 and A100; calibrated_lr3e5 is unchanged from dicos-r3, which is the last run that family had",
   "snapshots": [
     {
       "family": "calibrated_lr3e5",
@@ -10,17 +10,17 @@
     },
     {
       "family": "calibrated_lr1e4",
-      "id": "dicos-r3-calibrated-lr1e4:joint:0008",
+      "id": "dicos-p6-calibrated-lr1e4:joint:0015",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr3e4",
-      "id": "dicos-r3-calibrated-lr3e4:joint:0010",
+      "id": "dicos-p7-calibrated-lr3e4:joint:0022",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     },
     {
       "family": "calibrated_lr1e4_halfbatch",
-      "id": "dicos-r3-calibrated-lr1e4-halfbatch:joint:0010",
+      "id": "dicos-p7-calibrated-lr1e4-halfbatch:joint:0021",
       "basis": "lowest verified validation-loss checkpoint for this calibrated family"
     }
   ]
