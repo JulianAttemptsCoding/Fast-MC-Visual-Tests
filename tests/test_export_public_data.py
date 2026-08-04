@@ -67,6 +67,13 @@ class ExportTest(unittest.TestCase):
             self.assertEqual(first_bytes, second_bytes)
             self.assertEqual(gzip.decompress(first_bytes), (source / "epoch.json").read_bytes())
             self.assertEqual(first["epochs"][0]["sha256"], digest(first_bytes))
+            self.assertEqual(first["default_snapshot_id"], "run:joint:0002")
+
+    def test_default_snapshot_must_be_in_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source, destination = self.fixture(Path(temporary))
+            with self.assertRaisesRegex(ValueError, "default snapshot"):
+                export(source, destination, None, "missing:joint:9999")
 
     def test_rejects_test_split_use(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

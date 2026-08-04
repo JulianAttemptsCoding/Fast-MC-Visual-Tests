@@ -58,6 +58,7 @@ def export(
     source: Path,
     destination: Path,
     selected_ids: list[str] | None = None,
+    default_snapshot_id: str | None = None,
 ) -> dict[str, Any]:
     manifest_path = source / "manifest.json"
     manifest_bytes = manifest_path.read_bytes()
@@ -113,9 +114,16 @@ def export(
     public_manifest["epochs"] = public_rows
     public_manifest["latest_id"] = public_rows[-1]["id"]
     public_manifest["latest_epoch"] = public_rows[-1]["epoch"]
+    available_ids = {str(row["id"]) for row in public_rows}
+    if default_snapshot_id is None:
+        default_snapshot_id = str(public_rows[-1]["id"])
+    if default_snapshot_id not in available_ids:
+        raise ValueError("default snapshot is not in the public selection")
+    public_manifest["default_snapshot_id"] = default_snapshot_id
     public_manifest["publication_selection"] = {
         "policy": "one accepted checkpoint per calibrated model family",
         "snapshot_count": len(public_rows),
+        "default_snapshot_id": default_snapshot_id,
     }
     atomic_write(destination / "manifest.json", canonical_json(public_manifest))
     epoch_directory = (destination / "epochs").resolve()
@@ -143,6 +151,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     selected_ids = None
+    default_snapshot_id = None
     if args.selection:
         selection = json.loads(args.selection.resolve().read_text(encoding="utf-8"))
         if selection.get("schema_version") != 1:
@@ -152,13 +161,20 @@ def main() -> None:
         if not snapshots or len(families) != len(set(families)):
             raise ValueError("public selection must contain unique model families")
         selected_ids = [str(row["id"]) for row in snapshots]
-    manifest = export(args.source.resolve(), args.destination.resolve(), selected_ids)
+        default_snapshot_id = selection.get("default_snapshot_id")
+    manifest = export(
+        args.source.resolve(),
+        args.destination.resolve(),
+        selected_ids,
+        default_snapshot_id,
+    )
     compressed = sum(row["compressed_bytes"] for row in manifest["epochs"])
     print(
         json.dumps(
             {
                 "epochs": len(manifest["epochs"]),
                 "latest_id": manifest.get("latest_id"),
+                "default_snapshot_id": manifest.get("default_snapshot_id"),
                 "compressed_bytes": compressed,
                 "test_events_used": 0,
                 "removed_stale_epoch_files": manifest.pop("_removed_stale_epoch_files", 0),

@@ -5,8 +5,10 @@ Each checkpoint compares 50 fixed validation conditions, one Geant4 reference
 per condition, and five independently sampled Fast-MC showers with the same
 incident four-vector.
 
-The dashboard is diagnostic evidence, not physics validation. It never uses the
-test split for visualization or checkpoint selection.
+The dashboard is diagnostic evidence, not physics validation. Its artifacts and
+checkpoint selection use zero test events. Historical isolated test studies in
+the parent research repository are disclosed separately and do not feed this
+site or model decisions.
 
 ## Local development
 

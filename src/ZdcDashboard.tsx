@@ -36,6 +36,7 @@ type Manifest = {
   public_data_format?: string;
   latest_epoch: number;
   latest_id?: string;
+  default_snapshot_id?: string;
   geometry_path: string;
   geometry_sha256: string;
   selection_sha256: string;
@@ -334,7 +335,10 @@ export function ZdcDashboard() {
         (row) => row.epoch === next.manifest.latest_epoch,
       ) ??
       next.manifest.epochs[next.manifest.epochs.length - 1];
-    const latest = next.manifest.latest_id ?? snapshotId(latestRow);
+    const latest =
+      next.manifest.default_snapshot_id ??
+      next.manifest.latest_id ??
+      snapshotId(latestRow);
     setSelectedSnapshot((current) =>
       current == null ||
       !next.manifest.epochs.some((row) => snapshotId(row) === current)
@@ -878,8 +882,9 @@ export function ZdcDashboard() {
             validation set.
           </p>
           <p>
-            <strong>Closed test split.</strong> Every public artifact passed schema,
-            hash, geometry, invariant, and zero-test-use gates before publication.
+            <strong>Zero-test public artifacts.</strong> Every public artifact passed
+            schema, hash, geometry, invariant, and zero-test-use gates before
+            publication. Historical isolated test studies are not inputs here.
           </p>
         </div>
       </section>
@@ -908,7 +913,8 @@ export function ZdcDashboard() {
       <footer>
         <p>
           Visual similarity is diagnostic evidence—not physics validation. Frozen
-          validation metrics and untouched test evaluation remain authoritative.
+          validation metrics and separately governed test evaluation remain
+          authoritative.
         </p>
         <span>CBSC-ZDC v2.2 · public visual QA</span>
       </footer>
